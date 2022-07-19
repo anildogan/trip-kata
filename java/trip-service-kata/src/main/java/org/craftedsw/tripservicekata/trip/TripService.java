@@ -1,48 +1,39 @@
 package org.craftedsw.tripservicekata.trip;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.craftedsw.tripservicekata.exception.UserNotLoggedInException;
 import org.craftedsw.tripservicekata.user.User;
 import org.craftedsw.tripservicekata.user.UserSession;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
 public class TripService {
 
-	UserSession userSession;
-	TripDAO tripDao;
+    private final UserSession userSession;
+    private final TripDAO tripDao;
 
-	public TripService(UserSession userSession, TripDAO tripDao) {
-		this.userSession = userSession;
-		this.tripDao = tripDao;
-	}
+    public TripService(UserSession userSession, TripDAO tripDao) {
+        this.userSession = userSession;
+        this.tripDao = tripDao;
+    }
 
-	public List<Trip> getTripsByUser(User user) throws UserNotLoggedInException {
-		List<Trip> tripList = new ArrayList<>();
-		User loggedUser = getLoggedUser();
-		boolean isFriend = false;
-		if (loggedUser != null) {
-			for (User friend : user.getFriends()) {
-				if (friend.equals(loggedUser)) {
-					isFriend = true;
-					break;
-				}
-			}
-			if (isFriend) {
-				tripList = getTrips(user);
-			}
-			return tripList;
-		} else {
-			throw new UserNotLoggedInException();
-		}
-	}
+    public List<Trip> getTripsByUser(User user) throws UserNotLoggedInException {
+        final User loggedUser = getLoggedUser().orElseThrow(UserNotLoggedInException::new);
 
-	protected List<Trip> getTrips(User user) {
-		return tripDao.findTripsBy(user);
-	}
+        return isFriend(user, loggedUser) ? getTrips(user) : Collections.emptyList();
+    }
 
-	protected User getLoggedUser() {
-		return userSession.getLoggedUser();
-	}
+    private boolean isFriend(User user, User loggedUser) {
+        return user.getFriends().stream().anyMatch(user1 -> user1.equals(loggedUser));
+    }
+
+    protected List<Trip> getTrips(User user) {
+        return tripDao.findTripsBy(user);
+    }
+
+    protected Optional<User> getLoggedUser() {
+        return Optional.of(userSession.getLoggedUser());
+    }
 
 }

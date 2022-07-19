@@ -22,7 +22,6 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class TripServiceTest {
 
-
     @Mock
     private TripDAO tripDAO;
 
@@ -73,6 +72,23 @@ public class TripServiceTest {
 
         //then
         assertEquals(trips, assertedTrips);
+    }
+
+    @Test
+    void it_should_get_empty_trips_when_user_has_no_friends(){
+        //given
+        User user = new User();
+        User user1 = new User();
+        User loggedUser = new User();
+
+        user.addFriend(user1);
+        when(userSession.getLoggedUser()).thenReturn(loggedUser);
+
+        //when
+        final List<Trip> assertedTrips = newTripService.getTripsByUser(user);
+
+        //then
+        assertEquals(Collections.emptyList(), assertedTrips);
     }
 
     @Test
